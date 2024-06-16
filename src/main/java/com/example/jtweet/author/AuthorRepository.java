@@ -2,6 +2,7 @@ package com.example.jtweet.author;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
@@ -9,8 +10,9 @@ import org.springframework.stereotype.Repository;
 public class AuthorRepository {
     private List<Author> authors = new ArrayList<>();
 
-    public Author getAuthor() {
-        return new Author("Andy", 12);
+    public Optional<Author> getAuthor() {
+        Author author = new Author("Andy", 12);
+        return Optional.ofNullable(author);
     }
     public List<Author> getAuthorList() {
         authors.add(

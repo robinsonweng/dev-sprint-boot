@@ -2,14 +2,14 @@ package com.example.jtweet.author;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -20,8 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(AuthorController.class)
 public class AuthorControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -33,7 +32,7 @@ public class AuthorControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void retrieve_author_list_should_return_list_of_author() throws Exception {
+    void given_lots_of_author_to_repository_should_return_list_of_author_200() throws Exception {
         List<Author> mockAuthorList = new ArrayList<>();
         mockAuthorList.add(
             new Author("Bruce", 11)
@@ -55,18 +54,43 @@ public class AuthorControllerTest {
     }
 
     @Test
-    void retrieve_author_by_id_should_return_single_author() throws Exception {
+    void given_no_author_to_repository_should_return_empty_list_200() throws Exception {
+        List<?> emptyList = new ArrayList<>();
+
+        Mockito.doReturn(emptyList).when(repository).getAuthorList();
+
+        String expectedResponse = objectMapper.writeValueAsString(emptyList);
+
+        this.mockMvc.perform(get("/authors")).andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(content().json(expectedResponse));
+
+        verify(repository).getAuthorList();
+    }
+
+    @Test
+    void given_one_author_should_return_single_author_200() throws Exception {
         Author mockAuthor = new Author("Bruce", 12);
 
-        Mockito.doReturn(mockAuthor).when(repository).getAuthor();
+        Mockito.doReturn(Optional.ofNullable(mockAuthor)).when(repository).getAuthor();
 
         String expectedResponse = objectMapper.writeValueAsString(mockAuthor);
-
-        when(repository.getAuthor()).thenReturn(mockAuthor);
 
         this.mockMvc.perform(get("/authors/123")).andDo(print())
             .andExpect(status().isOk())
             .andExpect(content().json(expectedResponse));
+
+        verify(repository).getAuthor();
+    }
+
+    @Test
+    void given_no_author_should_return_no_author_404() throws Exception {
+        Mockito.doReturn(Optional.empty()).when(repository).getAuthor();
+
+        when(repository.getAuthor()).thenReturn(Optional.empty());
+
+        this.mockMvc.perform(get("/authors/123")).andDo(print())
+            .andExpect(status().isNotFound());
 
         verify(repository).getAuthor();
     }

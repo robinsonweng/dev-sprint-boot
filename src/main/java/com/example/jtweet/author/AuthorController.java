@@ -3,6 +3,7 @@ package com.example.jtweet.author;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +18,8 @@ public class AuthorController {
 
     @GetMapping("/authors/{authorId}")
     public ResponseEntity<Author> RetrieveAuthorById(@PathVariable String authorId) {
-        Author fakeAuthor = authorRepository.getAuthor();
-        return new ResponseEntity<>(fakeAuthor, HttpStatus.OK);
+        Author Author = authorRepository.getAuthor().orElseThrow(() -> new ResourceNotFoundException());
+        return new ResponseEntity<>(Author, HttpStatus.OK);
     }
 
     @GetMapping("/authors")
